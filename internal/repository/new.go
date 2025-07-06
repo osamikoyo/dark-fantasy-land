@@ -76,3 +76,18 @@ func (r *Repository) GetNews(ctx context.Context, filter map[string]string) ([]e
 
 	return news, nil
 }
+
+func (r *Repository) Delete(ctx context.Context, filter map[string]string) error {
+	r.logger.Debug("deleting new", zap.Any("filter", filter))
+
+	_, err := r.newsColl.DeleteOne(ctx, filter)
+	if err != nil {
+		r.logger.Error("failed delete new", zap.Error(err))
+
+		return err
+	}
+
+	r.logger.Info("new deleted", zap.Any("filter", filter))
+
+	return nil
+}
