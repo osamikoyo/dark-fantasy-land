@@ -9,7 +9,7 @@ import (
 )
 
 func (c *Casher) AddArticleToCash(ctx context.Context, article *entity.Article) error {
-	if article != nil {
+	if article == nil {
 		return NIL_INPUT_ERROR
 	}
 
