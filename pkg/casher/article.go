@@ -76,5 +76,26 @@ func (c *Casher) UpdateArticleInCash(ctx context.Context, author, title, key str
 		return err
 	}
 
-	return nil                                  
+	return nil
+}
+
+func (c *Casher) DeleteArticleFromCash(ctx context.Context, author, title string) error {
+	if author == "" || title == "" {
+		return NIL_INPUT_ERROR
+	}
+
+	redisKey := newArticleKey(author, title)
+
+	c.logger.Debug("deleting articles in cash", zap.String("key", redisKey))
+
+	_, err := c.client.Del(ctx, redisKey).Result()
+	if err != nil {
+		c.logger.Error("failed to delete article",
+			zap.String("key", redisKey),
+			zap.Error(err))
+
+		return err
+	}
+
+	return nil
 }
