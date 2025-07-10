@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/osamikoyo/dark-fantasy-land/internal/entity"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +26,7 @@ func (r *Repository) CreateArticle(ctx context.Context, article *entity.Article)
 	return nil
 }
 
-func (r *Repository) UpdateArticle(ctx context.Context, filter map[string]string, update map[string]string) error {
+func (r *Repository) UpdateArticle(ctx context.Context, filter, update map[string]interface{}) error {
 	r.logger.Debug("updating article",
 		zap.Any("filter", filter),
 		zap.Any("update", update))
@@ -61,7 +62,7 @@ func (r *Repository) DeleteArticle(ctx context.Context, filter map[string]string
 	return nil
 }
 
-func (r *Repository) GetArticle(ctx context.Context, filter map[string]string) ([]entity.Article, error) {
+func (r *Repository) GetArticle(ctx context.Context, filter map[string]interface{}) ([]entity.Article, error) {
 	r.logger.Debug("fetching article",
 		zap.Any("filter", filter))
 
@@ -91,6 +92,36 @@ func (r *Repository) GetArticle(ctx context.Context, filter map[string]string) (
 	if err = res.Err(); err != nil {
 		r.logger.Error("error from fetch response", zap.Error(err))
 
+		return nil, err
+	}
+
+	return articles, nil
+}
+
+func (r *Repository) GetArticlesLimited(ctx context.Context, filter map[string]interface{}, limit int64) ([]entity.Article, error) {
+	r.logger.Debug("fetching limited articles", zap.Any("filter", filter), zap.Int64("limit", limit))
+
+	findOptions := options.Find()
+	findOptions.SetLimit(limit)
+
+	res, err := r.articlesColl.Find(ctx, filter, findOptions)
+	if err != nil {
+		r.logger.Error("failed fetch limited articles", zap.Any("filter", filter), zap.Error(err))
+		return nil, err
+	}
+
+	var articles []entity.Article
+	for res.Next(ctx) {
+		var article entity.Article
+		if err = res.Decode(&article); err != nil {
+			r.logger.Warn("failed decode article", zap.Error(err))
+			continue
+		}
+		articles = append(articles, article)
+	}
+
+	if err = res.Err(); err != nil {
+		r.logger.Error("error from fetch response", zap.Error(err))
 		return nil, err
 	}
 
