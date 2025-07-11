@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/osamikoyo/dark-fantasy-land/internal/entity"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -13,86 +14,73 @@ func (r *Repository) CreateArticle(ctx context.Context, article *entity.Article)
 
 	res, err := r.articlesColl.InsertOne(ctx, article)
 	if err != nil {
-		r.logger.Error("failed create article",
-			zap.String("title", article.Title),
-			zap.Error(err))
-
-		return err
+		r.logger.Error("failed create article", zap.String("title", article.Title), zap.Error(err))
+		return fmt.Errorf("create article: %w", ErrInsertFailed)
 	}
 
-	r.logger.Info("article created",
-		zap.String("inserted_id", res.InsertedID.(string)))
-
+	r.logger.Info("article created", zap.String("inserted_id", fmt.Sprintf("%v", res.InsertedID)))
 	return nil
 }
 
 func (r *Repository) UpdateArticle(ctx context.Context, filter, update map[string]interface{}) error {
-	r.logger.Debug("updating article",
-		zap.Any("filter", filter),
-		zap.Any("update", update))
+	r.logger.Debug("updating article", zap.Any("filter", filter), zap.Any("update", update))
 
 	res, err := r.articlesColl.UpdateOne(ctx, filter, update)
 	if err != nil {
 		r.logger.Error("failed update article", zap.Error(err))
-
-		return err
+		return fmt.Errorf("update article: %w", ErrUpdateFailed)
 	}
 
-	r.logger.Info("article updated",
-		zap.Int64("modifed_count", res.ModifiedCount))
+	if res.MatchedCount == 0 {
+		return ErrNotFound
+	}
 
+	r.logger.Info("article updated", zap.Int64("modifed_count", res.ModifiedCount))
 	return nil
 }
 
-func (r *Repository) DeleteArticle(ctx context.Context, filter map[string]string) error {
-	r.logger.Debug("deleting article",
-		zap.Any("filter", filter))
-
-	_, err := r.articlesColl.DeleteOne(ctx, filter)
+func (r *Repository) DeleteArticle(ctx context.Context, filter map[string]interface{}) error {
+	r.logger.Debug("deleting article", zap.Any("filter", filter))
+	res, err := r.articlesColl.DeleteOne(ctx, filter)
 	if err != nil {
-		r.logger.Error("failed delete article",
-			zap.Error(err))
-
-		return err
+		r.logger.Error("failed delete article", zap.Error(err))
+		return fmt.Errorf("delete article: %w", ErrDeleteFailed)
 	}
 
-	r.logger.Info("deleted article",
-		zap.Any("filter", filter))
+	if res.DeletedCount == 0 {
+		return ErrNotFound
+	}
 
+	r.logger.Info("deleted article", zap.Any("filter", filter))
 	return nil
 }
 
 func (r *Repository) GetArticle(ctx context.Context, filter map[string]interface{}) ([]entity.Article, error) {
-	r.logger.Debug("fetching article",
-		zap.Any("filter", filter))
+	r.logger.Debug("fetching article", zap.Any("filter", filter))
 
 	res, err := r.articlesColl.Find(ctx, filter)
 	if err != nil {
-		r.logger.Error("failed fetch articles",
-			zap.Any("filter", filter),
-			zap.Error(err))
-
-		return nil, err
+		r.logger.Error("failed fetch articles", zap.Any("filter", filter), zap.Error(err))
+		return nil, fmt.Errorf("get articles: %w", ErrNotFound)
 	}
 
 	var articles []entity.Article
-
 	for res.Next(ctx) {
 		var article entity.Article
-
 		if err = res.Decode(&article); err != nil {
 			r.logger.Warn("failed decode article", zap.Error(err))
-
-			continue
+			return nil, fmt.Errorf("decode article: %w", ErrDecodeFailed)
 		}
-
 		articles = append(articles, article)
 	}
 
 	if err = res.Err(); err != nil {
 		r.logger.Error("error from fetch response", zap.Error(err))
+		return nil, fmt.Errorf("parse articles: %w", ErrDecodeFailed)
+	}
 
-		return nil, err
+	if len(articles) == 0 {
+		return nil, ErrNoDocuments
 	}
 
 	return articles, nil
@@ -107,7 +95,7 @@ func (r *Repository) GetArticlesLimited(ctx context.Context, filter map[string]i
 	res, err := r.articlesColl.Find(ctx, filter, findOptions)
 	if err != nil {
 		r.logger.Error("failed fetch limited articles", zap.Any("filter", filter), zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("get limited articles: %w", ErrNotFound)
 	}
 
 	var articles []entity.Article
@@ -115,14 +103,18 @@ func (r *Repository) GetArticlesLimited(ctx context.Context, filter map[string]i
 		var article entity.Article
 		if err = res.Decode(&article); err != nil {
 			r.logger.Warn("failed decode article", zap.Error(err))
-			continue
+			return nil, fmt.Errorf("decode article: %w", ErrDecodeFailed)
 		}
 		articles = append(articles, article)
 	}
 
 	if err = res.Err(); err != nil {
 		r.logger.Error("error from fetch response", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("parse articles: %w", ErrDecodeFailed)
+	}
+
+	if len(articles) == 0 {
+		return nil, ErrNoDocuments
 	}
 
 	return articles, nil
