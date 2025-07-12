@@ -25,6 +25,7 @@ type Repository struct {
 	newsColl      *mongo.Collection
 	cfuColl       *mongo.Collection
 	wallpaperColl *mongo.Collection
+	userColl      *mongo.Collection
 	logger        *logger.Logger
 }
 
