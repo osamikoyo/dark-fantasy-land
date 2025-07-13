@@ -11,11 +11,15 @@ import (
 const Limit = 20
 
 func (s *Service) SendArticleToCensor(article *entity.Article) error {
-	if article == nil{
+	if article == nil {
 		return ErrInvalidInput
 	}
 
-	return s.sender.SendToCensor("articles", article)
+	if err := s.sender.SendToCensor("articles", article); err != nil {
+		return ErrInternal
+	}
+
+	return nil
 }
 
 func (s *Service) CreateArticle(article *entity.Article) error {
