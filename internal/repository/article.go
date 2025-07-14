@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/osamikoyo/dark-fantasy-land/internal/entity"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
@@ -55,35 +56,27 @@ func (r *Repository) DeleteArticle(ctx context.Context, filter map[string]interf
 	return nil
 }
 
-func (r *Repository) GetArticle(ctx context.Context, filter map[string]interface{}) ([]entity.Article, error) {
-	r.logger.Debug("fetching article", zap.Any("filter", filter))
+func (r *Repository) GetArticle(ctx context.Context, filter map[string]interface{}) (*entity.Article, error) {
+	r.logger.Debug("fetching single article", zap.Any("filter", filter))
 
-	res, err := r.articlesColl.Find(ctx, filter)
-	if err != nil {
-		r.logger.Error("failed fetch articles", zap.Any("filter", filter), zap.Error(err))
-		return nil, fmt.Errorf("get articles: %w", ErrNotFound)
-	}
-
-	var articles []entity.Article
-	for res.Next(ctx) {
-		var article entity.Article
-		if err = res.Decode(&article); err != nil {
-			r.logger.Warn("failed decode article", zap.Error(err))
-			return nil, fmt.Errorf("decode article: %w", ErrDecodeFailed)
+	res := r.articlesColl.FindOne(ctx, filter)
+	if res.Err() != nil {
+		if res.Err() == mongo.ErrNoDocuments {
+			r.logger.Warn("article not found", zap.Any("filter", filter))
+			return nil, ErrNotFound
 		}
-		articles = append(articles, article)
+		r.logger.Error("failed to get article", zap.Error(res.Err()))
+		return nil, fmt.Errorf("get article: %w", res.Err())
 	}
 
-	if err = res.Err(); err != nil {
-		r.logger.Error("error from fetch response", zap.Error(err))
-		return nil, fmt.Errorf("parse articles: %w", ErrDecodeFailed)
+	var article entity.Article
+	if err := res.Decode(&article); err != nil {
+		r.logger.Warn("failed decode article", zap.Error(err))
+		return nil, fmt.Errorf("decode article: %w", ErrDecodeFailed)
 	}
 
-	if len(articles) == 0 {
-		return nil, ErrNoDocuments
-	}
-
-	return articles, nil
+	r.logger.Info("article fetched", zap.Any("article", article))
+	return &article, nil
 }
 
 func (r *Repository) GetArticlesLimited(ctx context.Context, filter map[string]interface{}, limit int64) ([]entity.Article, error) {
