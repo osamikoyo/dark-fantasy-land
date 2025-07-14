@@ -14,6 +14,6 @@ func newNewKey(title, author string) string {
 	return fmt.Sprintf("new:%s:%s", author, title)
 }
 
-func newMemKey(imageName, author string) string {
-	return fmt.Sprintf("mem:%s:%s", imageName, author)
+func newMemKey(imageName, title string) string {
+	return fmt.Sprintf("mem:%s:%s", imageName, title)
 }
