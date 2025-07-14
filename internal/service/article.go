@@ -8,8 +8,6 @@ import (
 	"github.com/osamikoyo/dark-fantasy-land/internal/repository"
 )
 
-const Limit = 20
-
 func (s *Service) SendArticleToCensor(article *entity.Article) error {
 	if article == nil {
 		return ErrInvalidInput
