@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/osamikoyo/dark-fantasy-land/internal/entity"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
@@ -38,35 +39,27 @@ func (r *Repository) UpdateWallpaper(ctx context.Context, filter, update map[str
 	return nil
 }
 
-func (r *Repository) GetWallpapers(ctx context.Context, filter map[string]interface{}) ([]entity.Wallpaper, error) {
-	r.logger.Debug("fetching wallpapers", zap.Any("filter", filter))
-	res, err := r.wallpaperColl.Find(ctx, filter)
-	if err != nil {
-		r.logger.Error("failed to get wallpapers", zap.Error(err))
-		return nil, fmt.Errorf("get wallpapers: %w", ErrNotFound)
-	}
-	defer res.Close(ctx)
+func (r *Repository) GetWallpaper(ctx context.Context, filter map[string]interface{}) (*entity.Wallpaper, error) {
+    r.logger.Debug("fetching single wallpaper", zap.Any("filter", filter))
 
-	var wallpapers []entity.Wallpaper
-	for res.Next(ctx) {
-		var wallpaper entity.Wallpaper
-		if err := res.Decode(&wallpaper); err != nil {
-			r.logger.Warn("failed to decode wallpaper", zap.Error(err))
-			return nil, fmt.Errorf("decode wallpaper: %w", ErrDecodeFailed)
-		}
-		wallpapers = append(wallpapers, wallpaper)
-	}
-	if err = res.Err(); err != nil {
-		r.logger.Error("failed to parse wallpapers", zap.Error(err))
-		return nil, fmt.Errorf("parse wallpapers: %w", ErrDecodeFailed)
-	}
+    res := r.wallpaperColl.FindOne(ctx, filter)
+    if res.Err() != nil {
+        if res.Err() == mongo.ErrNoDocuments {
+            r.logger.Warn("wallpaper not found", zap.Any("filter", filter))
+            return nil, ErrNotFound
+        }
+        r.logger.Error("failed to get wallpaper", zap.Error(res.Err()))
+        return nil, fmt.Errorf("get wallpaper: %w", res.Err())
+    }
 
-	if len(wallpapers) == 0 {
-		return nil, ErrNoDocuments
-	}
+    var wallpaper entity.Wallpaper
+    if err := res.Decode(&wallpaper); err != nil {
+        r.logger.Warn("failed to decode wallpaper", zap.Error(err))
+        return nil, fmt.Errorf("decode wallpaper: %w", ErrDecodeFailed)
+    }
 
-	r.logger.Info("wallpapers fetched", zap.Int("length", len(wallpapers)))
-	return wallpapers, nil
+    r.logger.Info("wallpaper fetched", zap.Any("wallpaper", wallpaper))
+    return &wallpaper, nil
 }
 
 func (r *Repository) GetWallpapersLimited(ctx context.Context, filter map[string]interface{}, limit int64) ([]entity.Wallpaper, error) {
