@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/osamikoyo/dark-fantasy-land/internal/entity"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
@@ -41,39 +42,27 @@ func (r *Repository) UpdateNew(ctx context.Context, filter, update map[string]in
 	return nil
 }
 
-func (r *Repository) GetNews(ctx context.Context, filter map[string]interface{}) ([]entity.New, error) {
-	r.logger.Debug("fetching news", zap.Any("filter", filter))
+func (r *Repository) GetNews(ctx context.Context, filter map[string]interface{}) (*entity.New, error) {
+    r.logger.Debug("fetching single news", zap.Any("filter", filter))
 
-	res, err := r.newsColl.Find(ctx, filter)
-	if err != nil {
-		r.logger.Error("failed get news", zap.Error(err))
-		return nil, fmt.Errorf("get news: %w", ErrNotFound)
-	}
-	defer res.Close(ctx)
+    res := r.newsColl.FindOne(ctx, filter)
+    if res.Err() != nil {
+        if res.Err() == mongo.ErrNoDocuments {
+            r.logger.Warn("news not found", zap.Any("filter", filter))
+            return nil, ErrNotFound
+        }
+        r.logger.Error("failed to get news", zap.Error(res.Err()))
+        return nil, fmt.Errorf("get news: %w", res.Err())
+    }
 
-	var news []entity.New
+    var n entity.New
+    if err := res.Decode(&n); err != nil {
+        r.logger.Warn("failed decode news", zap.Error(err))
+        return nil, fmt.Errorf("decode news: %w", ErrDecodeFailed)
+    }
 
-	for res.Next(ctx) {
-		var new entity.New
-		if err := res.Decode(&new); err != nil {
-			r.logger.Warn("failed decode new", zap.Error(err))
-			return nil, fmt.Errorf("decode news: %w", ErrDecodeFailed)
-		}
-		news = append(news, new)
-	}
-
-	if err = res.Err(); err != nil {
-		r.logger.Error("failed parse news", zap.Error(err))
-		return nil, fmt.Errorf("parse news: %w", ErrDecodeFailed)
-	}
-
-	if len(news) == 0 {
-		return nil, ErrNoDocuments
-	}
-
-	r.logger.Info("news was got", zap.Int("length", len(news)))
-
-	return news, nil
+    r.logger.Info("news fetched", zap.Any("news", n))
+    return &n, nil
 }
 
 func (r *Repository) GetNewsLimited(ctx context.Context, filter map[string]interface{}, limit int64) ([]entity.New, error) {
