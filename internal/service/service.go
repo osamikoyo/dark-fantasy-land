@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const Limit = 20
+
 var (
 	ErrNotFound         = errors.New("not found")
 	ErrTimeout          = errors.New("operation timeout")
