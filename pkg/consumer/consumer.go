@@ -31,6 +31,7 @@ func (c *Consumer) SubscribeAll() error {
 			c.logger.Error("failed unmarshal message body",
 				zap.String("subject", msg.Subject),
 				zap.Error(err))
+			return
 		}
 
 		if err := c.service.CreateArticle(req.Payload); err != nil {
@@ -50,6 +51,23 @@ func (c *Consumer) SubscribeAll() error {
 			c.logger.Error("failed unmarshal message body",
 				zap.String("subject", msg.Subject),
 				zap.Error(err))
+
+			return
+		}
+
+		if err := c.service.CreateMem(req.Payload); err != nil {
+			c.logger.Error("failed create mem",
+				zap.Any("mem", req.Payload),
+				zap.Error(err))
+
+			return
 		}
 	})
+	if err != nil{
+		c.logger.Error("failed subscribe on censored_mems", zap.Error(err))
+
+		return err
+	}
+
+	return nil
 }
