@@ -42,7 +42,7 @@ type (
 	NewCasher interface {
 		AddNewToCash(context.Context, *entity.New) error
 		UpdateNewInCash(context.Context, string, string, string, interface{}) error
-		GetNewFromCash(context.Context, string, string) (*entity.Mem, error)
+		GetNewFromCash(context.Context, string, string) (*entity.New, error)
 		DeleteNewFromCash(context.Context, string, string) error
 	}
 
