@@ -7,6 +7,11 @@ type Config struct {
 	Host     string
 	MongoUrl string
 	RedisUrl string
+	MinioUrl string
+	MinioAccessKey string
+	MinioSecretKey string
+	MinioBuckets [2]string
+	MinioSSL bool
 }
 
 func NewConfig() *Config {
@@ -25,5 +30,13 @@ func NewConfig() *Config {
 		Host:     "localhost",
 		MongoUrl: url,
 		RedisUrl: redisUrl,
+		MinioUrl: "localhost:9000",
+		MinioAccessKey: "minioadmin",
+		MinioSecretKey: "minioadmin",
+		MinioBuckets: [2]string{
+			"wallpapers",
+			"mems",
+		},
+		MinioSSL: false,
 	}
 }
