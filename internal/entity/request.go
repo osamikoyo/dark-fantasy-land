@@ -2,9 +2,9 @@ package entity
 
 import "time"
 
-type Request[T any] struct {
+type Request struct {
 	CensoredAt  time.Time
-	Payload     T
-	Status      string
+	Payload  map[string]string
+	Censored bool
 	Description string
 }
