@@ -8,18 +8,6 @@ import (
 	"github.com/osamikoyo/dark-fantasy-land/internal/repository"
 )
 
-func (s *Service) SendArticleToCensor(article *entity.Article) error {
-	if article == nil {
-		return ErrInvalidInput
-	}
-
-	if err := s.sender.SendToCensor("articles", article); err != nil {
-		return ErrInternal
-	}
-
-	return nil
-}
-
 func (s *Service) CreateArticle(article *entity.Article) error {
 	if article == nil {
 		return ErrInvalidInput
@@ -29,7 +17,15 @@ func (s *Service) CreateArticle(article *entity.Article) error {
 	defer cancel()
 
 	if err := s.repo.CreateArticle(ctx, article); err != nil {
+		if errors.Is(err, repository.ErrAlreadyExists) {
+			return ErrAlreadyExists
+		}
+
 		return ErrRepositoryFailed
+	}
+
+	if err := s.sendToCensor(article, "articles"); err != nil {
+		return err
 	}
 
 	if err := s.casher.AddArticleToCash(ctx, article); err != nil {
