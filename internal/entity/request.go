@@ -4,7 +4,7 @@ import "time"
 
 type Request struct {
 	CensoredAt  time.Time
-	Payload  map[string]string
-	Censored bool
+	Payload     map[string]string
+	Censored    bool
 	Description string
 }
