@@ -2,7 +2,14 @@ package config
 
 import "os"
 
-type Config struct {
+type (
+	Buckets struct{
+		WallpaperFull string
+		WallpaperWatch string
+		Mems string
+	}
+
+Config struct {
 	Port           string
 	Host           string
 	MongoUrl       string
@@ -10,9 +17,11 @@ type Config struct {
 	MinioUrl       string
 	MinioAccessKey string
 	MinioSecretKey string
-	MinioBuckets   []string
+	MinioBuckets   Buckets
 	MinioSSL       bool
 }
+
+)
 
 func NewConfig() *Config {
 	url := os.Getenv("MONGO_URI")
@@ -33,9 +42,10 @@ func NewConfig() *Config {
 		MinioUrl:       "localhost:9000",
 		MinioAccessKey: "minioadmin",
 		MinioSecretKey: "minioadmin",
-		MinioBuckets: []string{
-			"wallpapers",
-			"mems",
+		MinioBuckets: Buckets{
+			WallpaperFull: "wallpaper_full",
+			WallpaperWatch: "wallpaper_watch",
+			Mems: "mem",
 		},
 		MinioSSL: false,
 	}
