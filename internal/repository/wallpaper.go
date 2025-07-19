@@ -40,26 +40,26 @@ func (r *Repository) UpdateWallpaper(ctx context.Context, filter, update map[str
 }
 
 func (r *Repository) GetWallpaper(ctx context.Context, filter map[string]interface{}) (*entity.Wallpaper, error) {
-    r.logger.Debug("fetching single wallpaper", zap.Any("filter", filter))
+	r.logger.Debug("fetching single wallpaper", zap.Any("filter", filter))
 
-    res := r.wallpaperColl.FindOne(ctx, filter)
-    if res.Err() != nil {
-        if res.Err() == mongo.ErrNoDocuments {
-            r.logger.Warn("wallpaper not found", zap.Any("filter", filter))
-            return nil, ErrNotFound
-        }
-        r.logger.Error("failed to get wallpaper", zap.Error(res.Err()))
-        return nil, fmt.Errorf("get wallpaper: %w", res.Err())
-    }
+	res := r.wallpaperColl.FindOne(ctx, filter)
+	if res.Err() != nil {
+		if res.Err() == mongo.ErrNoDocuments {
+			r.logger.Warn("wallpaper not found", zap.Any("filter", filter))
+			return nil, ErrNotFound
+		}
+		r.logger.Error("failed to get wallpaper", zap.Error(res.Err()))
+		return nil, fmt.Errorf("get wallpaper: %w", res.Err())
+	}
 
-    var wallpaper entity.Wallpaper
-    if err := res.Decode(&wallpaper); err != nil {
-        r.logger.Warn("failed to decode wallpaper", zap.Error(err))
-        return nil, fmt.Errorf("decode wallpaper: %w", ErrDecodeFailed)
-    }
+	var wallpaper entity.Wallpaper
+	if err := res.Decode(&wallpaper); err != nil {
+		r.logger.Warn("failed to decode wallpaper", zap.Error(err))
+		return nil, fmt.Errorf("decode wallpaper: %w", ErrDecodeFailed)
+	}
 
-    r.logger.Info("wallpaper fetched", zap.Any("wallpaper", wallpaper))
-    return &wallpaper, nil
+	r.logger.Info("wallpaper fetched", zap.Any("wallpaper", wallpaper))
+	return &wallpaper, nil
 }
 
 func (r *Repository) GetWallpapersLimited(ctx context.Context, filter map[string]interface{}, limit int64) ([]entity.Wallpaper, error) {
