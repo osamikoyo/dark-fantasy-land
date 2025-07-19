@@ -43,26 +43,26 @@ func (r *Repository) UpdateNew(ctx context.Context, filter, update map[string]in
 }
 
 func (r *Repository) GetNews(ctx context.Context, filter map[string]interface{}) (*entity.New, error) {
-    r.logger.Debug("fetching single news", zap.Any("filter", filter))
+	r.logger.Debug("fetching single news", zap.Any("filter", filter))
 
-    res := r.newsColl.FindOne(ctx, filter)
-    if res.Err() != nil {
-        if res.Err() == mongo.ErrNoDocuments {
-            r.logger.Warn("news not found", zap.Any("filter", filter))
-            return nil, ErrNotFound
-        }
-        r.logger.Error("failed to get news", zap.Error(res.Err()))
-        return nil, fmt.Errorf("get news: %w", res.Err())
-    }
+	res := r.newsColl.FindOne(ctx, filter)
+	if res.Err() != nil {
+		if res.Err() == mongo.ErrNoDocuments {
+			r.logger.Warn("news not found", zap.Any("filter", filter))
+			return nil, ErrNotFound
+		}
+		r.logger.Error("failed to get news", zap.Error(res.Err()))
+		return nil, fmt.Errorf("get news: %w", res.Err())
+	}
 
-    var n entity.New
-    if err := res.Decode(&n); err != nil {
-        r.logger.Warn("failed decode news", zap.Error(err))
-        return nil, fmt.Errorf("decode news: %w", ErrDecodeFailed)
-    }
+	var n entity.New
+	if err := res.Decode(&n); err != nil {
+		r.logger.Warn("failed decode news", zap.Error(err))
+		return nil, fmt.Errorf("decode news: %w", ErrDecodeFailed)
+	}
 
-    r.logger.Info("news fetched", zap.Any("news", n))
-    return &n, nil
+	r.logger.Info("news fetched", zap.Any("news", n))
+	return &n, nil
 }
 
 func (r *Repository) GetNewsLimited(ctx context.Context, filter map[string]interface{}, limit int64) ([]entity.New, error) {
