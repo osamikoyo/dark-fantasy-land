@@ -41,3 +41,15 @@ func NewService(repo Repository, casher Casher, sender Sender, timeout time.Dura
 func (s *Service) context() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), s.timeout)
 }
+
+func (s *Service) sendToCensor(value interface{}, subj string) error {
+	if value == nil {
+		return ErrInvalidInput
+	}
+
+	if err := s.sender.SendToCensor(subj, value); err != nil {
+		return ErrInternal
+	}
+
+	return nil
+}
