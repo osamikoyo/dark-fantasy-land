@@ -24,6 +24,10 @@ func (s *Service) CreateNew(new *entity.New) error {
 		return ErrRepositoryFailed
 	}
 
+	if err := s.sendToCensor(new, "news");err != nil{
+		return err
+	}
+
 	if err := s.casher.AddNewToCash(ctx, new); err != nil {
 		return ErrCacheSetFailed
 	}
@@ -139,7 +143,7 @@ func (s *Service) GetOneNew(author, title string) (*entity.New, error) {
 
 	errCount := 0
 
-	for errCount != 2{
+	for errCount != 2 {
 		select {
 		case new := <-newChan:
 			return new, nil
@@ -152,7 +156,7 @@ func (s *Service) GetOneNew(author, title string) (*entity.New, error) {
 }
 
 func (s *Service) GetManyNew(filter map[string]interface{}) ([]entity.New, error) {
-	if filter == nil{
+	if filter == nil {
 		return nil, ErrInvalidInput
 	}
 
@@ -160,7 +164,7 @@ func (s *Service) GetManyNew(filter map[string]interface{}) ([]entity.New, error
 	defer cancel()
 
 	news, err := s.repo.GetNewsLimited(ctx, filter, Limit)
-	if err != nil{
+	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrNotFound
 		}
