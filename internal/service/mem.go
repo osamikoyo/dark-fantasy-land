@@ -8,18 +8,6 @@ import (
 	"github.com/osamikoyo/dark-fantasy-land/internal/repository"
 )
 
-func (s *Service) SendMemToCensor(mem *entity.Mem) error {
-	if mem == nil {
-		return ErrInvalidInput
-	}
-
-	if err := s.sender.SendToCensor("mems", mem); err != nil {
-		return ErrInternal
-	}
-
-	return nil
-}
-
 func (s *Service) CreateMem(mem *entity.Mem) error {
 	if mem == nil {
 		return ErrInvalidInput
@@ -34,6 +22,10 @@ func (s *Service) CreateMem(mem *entity.Mem) error {
 		}
 
 		return ErrRepositoryFailed
+	}
+
+	if err := s.sendToCensor(mem, "mems");err != nil{
+		return err
 	}
 
 	if err := s.casher.AddMemToCash(ctx, mem); err != nil {
@@ -141,7 +133,7 @@ func (s *Service) GetManyMems(filter map[string]interface{}) ([]entity.Mem, erro
 	defer cancel()
 
 	mems, err := s.repo.GetMemsLimited(ctx, filter, Limit)
-	if err != nil{
+	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrNotFound
 		}
@@ -164,7 +156,7 @@ func (s *Service) DeleteMem(image_name, author string) error {
 	filter["image_name"] = image_name
 	filter["author"] = author
 
-	if err := s.repo.DeleteArticle(ctx, filter);err != nil{
+	if err := s.repo.DeleteArticle(ctx, filter); err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrNotFound
 		}
@@ -172,7 +164,7 @@ func (s *Service) DeleteMem(image_name, author string) error {
 		return ErrRepositoryFailed
 	}
 
-	if err := s.casher.DeleteMemInCash(ctx, image_name, author);err != nil{
+	if err := s.casher.DeleteMemInCash(ctx, image_name, author); err != nil {
 		return ErrCacheDelFailed
 	}
 
