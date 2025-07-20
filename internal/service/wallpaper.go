@@ -23,6 +23,10 @@ func (s *Service) CreateWallpaper(wallpaper *entity.Wallpaper) error {
 		return ErrRepositoryFailed
 	}
 
+	if err := s.sendToCensor(wallpaper, "wallpapers");err != nil{
+		return err
+	}
+
 	if err := s.casher.AddWallpaperToCash(ctx, wallpaper); err != nil {
 		return ErrCacheSetFailed
 	}
