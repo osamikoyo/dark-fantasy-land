@@ -34,8 +34,8 @@ func (s *Service) CreateWallpaper(wallpaper *entity.Wallpaper) error {
 	return nil
 }
 
-func (s *Service) UpdateWallpaper(imageName, topic string, update map[string]interface{}) error {
-	if imageName == "" || topic == "" || update == nil {
+func (s *Service) UpdateWallpaper(imageName, title string, update map[string]interface{}) error {
+	if imageName == "" || title == "" || update == nil {
 		return ErrInvalidInput
 	}
 
@@ -44,7 +44,7 @@ func (s *Service) UpdateWallpaper(imageName, topic string, update map[string]int
 
 	filter := map[string]interface{}{
 		"image_name": imageName,
-		"topic":      topic,
+		"title":      title,
 	}
 
 	if err := s.repo.UpdateWallpaper(ctx, filter, update); err != nil {
@@ -55,7 +55,7 @@ func (s *Service) UpdateWallpaper(imageName, topic string, update map[string]int
 	}
 
 	for key, value := range update {
-		if err := s.casher.UpdateWallpaperInCash(ctx, imageName, topic, key, value); err != nil {
+		if err := s.casher.UpdateWallpaperInCash(ctx, imageName, title, key, value); err != nil {
 			return ErrCacheSetFailed
 		}
 	}
@@ -63,8 +63,8 @@ func (s *Service) UpdateWallpaper(imageName, topic string, update map[string]int
 	return nil
 }
 
-func (s *Service) DeleteWallpaper(imageName, topic string) error {
-	if imageName == "" || topic == "" {
+func (s *Service) DeleteWallpaper(imageName, title string) error {
+	if imageName == "" || title == "" {
 		return ErrInvalidInput
 	}
 
@@ -73,7 +73,7 @@ func (s *Service) DeleteWallpaper(imageName, topic string) error {
 
 	filter := map[string]interface{}{
 		"image_name": imageName,
-		"topic":      topic,
+		"title":      title,
 	}
 
 	if err := s.repo.DeleteWallpaper(ctx, filter); err != nil {
@@ -83,15 +83,15 @@ func (s *Service) DeleteWallpaper(imageName, topic string) error {
 		return ErrRepositoryFailed
 	}
 
-	if err := s.casher.DeleteWallpaperFromCash(ctx, imageName, topic); err != nil {
+	if err := s.casher.DeleteWallpaperFromCash(ctx, imageName, title); err != nil {
 		return ErrCacheDelFailed
 	}
 
 	return nil
 }
 
-func (s *Service) GetOneWallpaper(imageName, topic string) (*entity.Wallpaper, error) {
-	if imageName == "" || topic == "" {
+func (s *Service) GetOneWallpaper(imageName, title string) (*entity.Wallpaper, error) {
+	if imageName == "" || title == "" {
 		return nil, ErrInvalidInput
 	}
 
@@ -100,7 +100,7 @@ func (s *Service) GetOneWallpaper(imageName, topic string) (*entity.Wallpaper, e
 
 	filter := map[string]interface{}{
 		"image_name": imageName,
-		"topic":      topic,
+		"title":      title,
 	}
 
 	var (
@@ -123,7 +123,7 @@ func (s *Service) GetOneWallpaper(imageName, topic string) (*entity.Wallpaper, e
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		wallpaper, err := s.casher.GetWallpaperFromCash(ctx, imageName, topic)
+		wallpaper, err := s.casher.GetWallpaperFromCash(ctx, imageName, title)
 		if err != nil {
 			errChan <- ErrCacheGetFailed
 			return
