@@ -3,24 +3,23 @@ package config
 import "os"
 
 type (
-	Buckets struct{
-		WallpaperFull string
+	Buckets struct {
+		WallpaperFull  string
 		WallpaperWatch string
-		Mems string
+		Mems           string
 	}
 
-Config struct {
-	Port           string
-	Host           string
-	MongoUrl       string
-	RedisUrl       string
-	MinioUrl       string
-	MinioAccessKey string
-	MinioSecretKey string
-	MinioBuckets   Buckets
-	MinioSSL       bool
-}
-
+	Config struct {
+		Port           string
+		Host           string
+		MongoUrl       string
+		RedisUrl       string
+		MinioUrl       string
+		MinioAccessKey string
+		MinioSecretKey string
+		MinioBuckets   Buckets
+		MinioSSL       bool
+	}
 )
 
 func NewConfig() *Config {
@@ -43,9 +42,9 @@ func NewConfig() *Config {
 		MinioAccessKey: "minioadmin",
 		MinioSecretKey: "minioadmin",
 		MinioBuckets: Buckets{
-			WallpaperFull: "wallpaper_full",
+			WallpaperFull:  "wallpaper_full",
 			WallpaperWatch: "wallpaper_watch",
-			Mems: "mem",
+			Mems:           "mem",
 		},
 		MinioSSL: false,
 	}
