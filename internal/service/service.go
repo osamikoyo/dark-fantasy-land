@@ -6,7 +6,11 @@ import (
 	"time"
 )
 
-const Limit = 20
+const (
+	Limit = 20
+	RetrierAttemps = 3
+	RetrierDuration = 2 * time.Second
+)
 
 var (
 	ErrNotFound         = errors.New("not found")
