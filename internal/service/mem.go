@@ -24,7 +24,7 @@ func (s *Service) CreateMem(mem *entity.Mem) error {
 		return ErrRepositoryFailed
 	}
 
-	if err := s.sendToCensor(mem, "mems");err != nil{
+	if err := s.sendToCensor(mem, "mems"); err != nil {
 		return err
 	}
 
