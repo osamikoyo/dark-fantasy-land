@@ -3,9 +3,11 @@ package service
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/osamikoyo/dark-fantasy-land/internal/entity"
 	"github.com/osamikoyo/dark-fantasy-land/internal/repository"
+	"github.com/osamikoyo/dark-fantasy-land/pkg/retrier"
 )
 
 func (s *Service) CreateArticle(article *entity.Article) error {
@@ -16,7 +18,9 @@ func (s *Service) CreateArticle(article *entity.Article) error {
 	ctx, cancel := s.context()
 	defer cancel()
 
-	if err := s.repo.CreateArticle(ctx, article); err != nil {
+	if err := retrier.Do(3, 2* time.Second, func() error {
+		return s.repo.CreateArticle(ctx, article)
+	}); err != nil {
 		if errors.Is(err, repository.ErrAlreadyExists) {
 			return ErrAlreadyExists
 		}
@@ -28,7 +32,9 @@ func (s *Service) CreateArticle(article *entity.Article) error {
 		return err
 	}
 
-	if err := s.casher.AddArticleToCash(ctx, article); err != nil {
+	if err := retrier.Do(RetrierAttemps, RetrierDuration, func() error {
+		return s.casher.AddArticleToCash(ctx, article)
+	}); err != nil {
 		return ErrCacheSetFailed
 	}
 
