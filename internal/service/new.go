@@ -24,7 +24,7 @@ func (s *Service) CreateNew(new *entity.New) error {
 		return ErrRepositoryFailed
 	}
 
-	if err := s.sendToCensor(new, "news");err != nil{
+	if err := s.sendToCensor(new, "news"); err != nil {
 		return err
 	}
 
