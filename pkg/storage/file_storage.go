@@ -1,18 +1,28 @@
 package storage
 
 import (
+	"bytes"
 	"context"
+	"image/jpeg"
 	"mime/multipart"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/minio/minio-go/v7"
+	"github.com/osamikoyo/dark-fantasy-land/internal/config"
 	"github.com/osamikoyo/dark-fantasy-land/pkg/logger"
 	"go.uber.org/zap"
+)
+
+const (
+	CommpressedQuality = 800
 )
 
 type Storage struct {
 	logger  *logger.Logger
 	client  *minio.Client
+	cfg     *config.Config
 	timeout time.Duration
 }
 
@@ -75,4 +85,48 @@ func (s *Storage) DownloadFile(filename, bucketName string) (*minio.Object, erro
 	}
 
 	return obj, nil
+}
+
+func (s *Storage) UploadAndCommpress(fileHeader *multipart.FileHeader, bucket string) error {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	img, err := jpeg.Decode(file)
+	if err != nil {
+		return err
+	}
+
+	var buf bytes.Buffer
+	err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: CommpressedQuality})
+	if err != nil {
+		return err
+	}
+
+	tmpFile, err := os.CreateTemp("", "compressed-*.jpg")
+	if err != nil {
+		return err
+	}
+	defer tmpFile.Close()
+
+	_, err = tmpFile.Write(buf.Bytes())
+	if err != nil {
+		return err
+	}
+
+	fileInfo, err := tmpFile.Stat()
+	if err != nil {
+		return err
+	}
+
+	newFileHeader := &multipart.FileHeader{
+		Filename: "compressed_" + filepath.Base(fileHeader.Filename),
+		Size:     fileInfo.Size(),
+		Header:   make(map[string][]string),
+	}
+	newFileHeader.Header.Set("Content-Type", "image/jpeg")
+
+	return s.UploadFile(newFileHeader, bucket)
 }
