@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/osamikoyo/dark-fantasy-land/internal/config"
 	"github.com/osamikoyo/dark-fantasy-land/internal/service"
 	"github.com/osamikoyo/dark-fantasy-land/pkg/storage"
 )
@@ -14,6 +15,8 @@ var (
 type Handler struct {
 	service *service.Service
 	storage *storage.Storage
+
+	cfg *config.Config
 }
 
 func NewHandler(service *service.Service) *Handler {
@@ -28,4 +31,8 @@ func (h *Handler) RegisterRouters(e *echo.Echo) {
 	articles.GET("/create", h.CreateArticle)
 	articles.GET("/get", h.GetArticle)
 	articles.GET("/getmany", h.GetArticles)
+
+	mems := e.Group("/mems")
+
+	mems.GET("/create", h.CreateMem)
 }
