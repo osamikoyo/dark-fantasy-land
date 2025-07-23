@@ -23,7 +23,7 @@ func (s *Service) CreateWallpaper(wallpaper *entity.Wallpaper) error {
 		return ErrRepositoryFailed
 	}
 
-	if err := s.sendToCensor(wallpaper, "wallpapers");err != nil{
+	if err := s.sendToCensor(wallpaper, "wallpapers"); err != nil {
 		return err
 	}
 
