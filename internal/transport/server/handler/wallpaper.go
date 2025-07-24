@@ -11,24 +11,24 @@ func (h *Handler) CreateWallpaper(c echo.Context) error {
 	var wallpaper entity.Wallpaper
 
 	if err := c.Bind(&wallpaper); err != nil {
-		return c.String(http.StatusBadRequest, ErrInvalidInput)
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
 	file, err := c.FormFile("image")
 	if err != nil {
-		return c.String(http.StatusBadRequest, ErrInvalidInput)
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
 	if err = h.storage.UploadFile(file, h.cfg.MinioBuckets.WallpaperFull); err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	if err = h.storage.UploadAndCommpress(file, h.cfg.MinioBuckets.WallpaperWatch); err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	if err = h.service.CreateWallpaper(&wallpaper); err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.String(http.StatusCreated, "wallpaper created")
@@ -49,7 +49,7 @@ func (h *Handler) GetWallpapers(c echo.Context) error {
 	}
 
 	wallpapers, err := h.service.GetManyWallpapers(filter)
-	if err != nil{
+	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -62,7 +62,7 @@ func (h *Handler) GetWallpaperInfo(c echo.Context) error {
 
 	wallpaper, err := h.service.GetOneWallpaper(image_name, title)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, wallpaper)
@@ -73,7 +73,7 @@ func (h *Handler) GetWallpaperImage(c echo.Context) error {
 
 	wallpaper, err := h.storage.DownloadFile(image_name, h.cfg.MinioBuckets.WallpaperWatch)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.Stream(http.StatusOK, "application/octet-stream", wallpaper)
@@ -84,7 +84,7 @@ func (h *Handler) DownloadWallpaper(c echo.Context) error {
 
 	wallpaper, err := h.storage.DownloadFile(image_name, h.cfg.MinioBuckets.WallpaperFull)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.Stream(http.StatusOK, "application/octet-stream", wallpaper)
