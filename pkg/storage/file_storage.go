@@ -122,7 +122,7 @@ func (s *Storage) UploadAndCommpress(fileHeader *multipart.FileHeader, bucket st
 	}
 
 	newFileHeader := &multipart.FileHeader{
-		Filename: "compressed_" + filepath.Base(fileHeader.Filename),
+		Filename: filepath.Base(fileHeader.Filename),
 		Size:     fileInfo.Size(),
 		Header:   make(map[string][]string),
 	}
