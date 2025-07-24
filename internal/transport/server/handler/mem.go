@@ -11,7 +11,7 @@ func (h *Handler) CreateMem(c echo.Context) error {
 	var mem entity.Mem
 
 	if err := c.Bind(mem); err != nil {
-		return c.String(http.StatusBadRequest, ErrInvalidInput)
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
 	if err := h.service.CreateMem(&mem); err != nil {
