@@ -18,7 +18,7 @@ func (s *Service) CreateArticle(article *entity.Article) error {
 	ctx, cancel := s.context()
 	defer cancel()
 
-	if err := retrier.Do(3, 2* time.Second, func() error {
+	if err := retrier.Do(3, 2*time.Second, func() error {
 		return s.repo.CreateArticle(ctx, article)
 	}); err != nil {
 		if errors.Is(err, repository.ErrAlreadyExists) {
