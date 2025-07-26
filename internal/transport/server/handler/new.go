@@ -11,11 +11,11 @@ func (h *Handler) CreateNew(c echo.Context) error {
 	var new entity.New
 
 	if err := c.Bind(&new); err != nil {
-		return c.String(http.StatusBadRequest, ErrInvalidInput)
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
 	if err := h.service.CreateNew(&new); err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.String(http.StatusCreated, "new created")
@@ -27,7 +27,7 @@ func (h *Handler) GetNew(c echo.Context) error {
 
 	new, err := h.service.GetOneNew(author, title)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, new)
@@ -49,7 +49,7 @@ func (h *Handler) GetNews(c echo.Context) error {
 
 	news, err := h.service.GetManyNew(filter)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, news)
