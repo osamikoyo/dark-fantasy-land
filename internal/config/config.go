@@ -15,6 +15,7 @@ type (
 		MongoUrl       string
 		RedisUrl       string
 		MinioUrl       string
+		NatsUrl        string
 		MinioAccessKey string
 		MinioSecretKey string
 		MinioBuckets   Buckets
@@ -33,12 +34,23 @@ func NewConfig() *Config {
 		redisUrl = "redis:6379"
 	}
 
+	natsUrl := os.Getenv("NATS_URI")
+	if redisUrl == "" {
+		redisUrl = "nats://nats:4222"
+	}
+
+	minioUrl := os.Getenv("MINIO_URI")
+	if minioUrl == "" {
+		minioUrl = "minio:9000"
+	}
+
 	return &Config{
 		Port:           "8080",
 		Host:           "localhost",
 		MongoUrl:       url,
 		RedisUrl:       redisUrl,
-		MinioUrl:       "localhost:9000",
+		NatsUrl:        natsUrl,
+		MinioUrl:       minioUrl,
 		MinioAccessKey: "minioadmin",
 		MinioSecretKey: "minioadmin",
 		MinioBuckets: Buckets{
