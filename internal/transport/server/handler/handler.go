@@ -7,11 +7,6 @@ import (
 	"github.com/osamikoyo/dark-fantasy-land/pkg/storage"
 )
 
-var (
-	ErrInvalidInput = "invalid input"
-	ErrInternal     = "internal server error"
-)
-
 type Handler struct {
 	service *service.Service
 	storage *storage.Storage
@@ -26,13 +21,29 @@ func NewHandler(service *service.Service) *Handler {
 }
 
 func (h *Handler) RegisterRouters(e *echo.Echo) {
-	articles := e.Group("/articles")
+	articles := e.Group("/article")
 
-	articles.GET("/create", h.CreateArticle)
-	articles.GET("/get", h.GetArticle)
-	articles.GET("/getmany", h.GetArticles)
+	articles.POST("/create", h.CreateArticle)
+	articles.GET("/get/one", h.GetArticle)
+	articles.GET("/get/more", h.GetArticles)
 
-	mems := e.Group("/mems")
+	mems := e.Group("/mem")
 
-	mems.GET("/create", h.CreateMem)
+	mems.POST("/create", h.CreateMem)
+	mems.GET("/get/info", h.GetMemInfo)
+	mems.GET("/get/image", h.GetMemImage)
+	mems.GET("/get/more", h.GetMems)
+
+	wallpapers := e.Group("/wallpaper")
+
+	wallpapers.POST("/create", h.CreateWallpaper)
+	wallpapers.GET("/get/info", h.GetWallpaperInfo)
+	wallpapers.GET("/get/image", h.GetWallpaperImage)
+	wallpapers.GET("/get/more", h.GetWallpapers)
+
+	news := e.Group("/news")
+
+	news.POST("/create", h.CreateArticle)
+	news.GET("/get/one", h.GetNew)
+	news.GET("/get/more", h.GetNews)
 }
