@@ -12,13 +12,13 @@ func (h *Handler) CreateArticle(c echo.Context) error {
 	var article entity.Article
 
 	if err := c.Bind(&article); err != nil {
-		return c.String(http.StatusBadRequest, ErrInvalidInput)
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
 	article.Timestamp = time.Now()
 
 	if err := h.service.CreateArticle(&article); err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.String(http.StatusCreated, "article created")
@@ -30,7 +30,7 @@ func (h *Handler) GetArticle(c echo.Context) error {
 
 	article, err := h.service.GetOneArticle(author, title)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, article)
@@ -52,7 +52,7 @@ func (h *Handler) GetArticles(c echo.Context) error {
 
 	articles, err := h.service.GetMoreArticles(filter)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, ErrInternal)
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, articles)
