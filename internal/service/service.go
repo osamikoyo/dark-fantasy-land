@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	Limit = 20
-	RetrierAttemps = 3
+	Limit           = 20
+	RetrierAttemps  = 3
 	RetrierDuration = 2 * time.Second
 )
 
